@@ -144,12 +144,12 @@ def eval_epoch(
         inn_row_num = opt.seq_len - opt.filter_size + 1
 
         recons_future_test_all = np.zeros(
-            (opt.sample_size, opt.batch_size, decoder_in_len)
+            (opt.sample_size, inn.shape[0], decoder_in_len)
         )
 
-        x_pred_median = np.empty((opt.batch_size, decoder_in_len))
-        x_pred_mean = np.empty((opt.batch_size, decoder_in_len))
-        for row in range(opt.batch_size):
+        x_pred_median = np.empty((inn.shape[0], decoder_in_len))
+        x_pred_mean = np.empty((inn.shape[0], decoder_in_len))
+        for row in range(inn.shape[0]):
             for j in range(decoder_in_len):
                 inn_test_temp = np.tile(inn[row, :, :].copy(), (opt.sample_size, 1, 1))
                 inn_test_temp[
@@ -196,10 +196,10 @@ def main(opt):
         lr=opt.lrD,
     )
     train_data = Custom_Dataset(
-        opt.seq_len, opt.data_path, opt.dataset, "train", opt.pred_step
+        opt.seq_len, opt.data_path, opt.dataset, "train", opt.seq_len
     )
     test_data = Custom_Dataset(
-        opt.seq_len, opt.data_path, opt.dataset, "test", opt.seq_len-2*(opt.filter_size-1)
+        opt.seq_len, opt.data_path, opt.dataset, "test", opt.seq_len, opt.filter_size
     )
     train_dataloader = DataLoader(train_data, batch_size=opt.batch_size, shuffle=True)
     test_dataloader = DataLoader(test_data, batch_size=opt.batch_size, shuffle=False)

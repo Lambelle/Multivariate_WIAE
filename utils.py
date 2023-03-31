@@ -22,31 +22,40 @@ def calculate_gradient_penalty(discriminator, real_output, fake_output):
     return gradient_penalty
 
 
-def metrics(true, pred_mean,pred_median):
+def metrics(true, pred_mean, pred_median):
     std = torch.std(true)
     mean = torch.mean(true)
     abs_mean = torch.mean(abs(true))
+
     mse = (
         torch.mean(
-            (true[abs(true) <= 3 * std + mean] - pred_mean[abs(true) <= 3 * std + mean]) ** 2
+            (true[abs(true) <= 3 * std + mean] - pred_mean[abs(true) <= 3 * std + mean])
+            ** 2
         )
         / abs_mean
     )
     mae = (
         torch.mean(
-            abs(true[abs(true) <= 3 * std + mean] - pred_median[abs(true) <= 3 * std + mean])
+            abs(
+                true[abs(true) <= 3 * std + mean]
+                - pred_median[abs(true) <= 3 * std + mean]
+            )
         )
         / abs_mean
     )
     median_se = (
         torch.median(
-            (true[abs(true) <= 3 * std + mean] - pred_mean[abs(true) <= 3 * std + mean]) ** 2
+            (true[abs(true) <= 3 * std + mean] - pred_mean[abs(true) <= 3 * std + mean])
+            ** 2
         )
         / abs_mean
     )
     median_ae = (
         torch.median(
-            abs(true[abs(true) <= 3 * std + mean] - pred_median[abs(true) <= 3 * std + mean])
+            abs(
+                true[abs(true) <= 3 * std + mean]
+                - pred_median[abs(true) <= 3 * std + mean]
+            )
         )
         / abs_mean
     )
