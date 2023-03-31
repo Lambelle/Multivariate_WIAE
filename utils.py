@@ -23,7 +23,6 @@ def calculate_gradient_penalty(discriminator, real_output, fake_output):
 
 
 def metrics(true, pred_mean,pred_median):
-    true = true.squeeze(1)
     std = torch.std(true)
     mean = torch.mean(true)
     abs_mean = torch.mean(abs(true))

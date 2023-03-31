@@ -3,6 +3,7 @@ import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 import numpy as np
+import numpy.matlib
 from model import Generator, Discriminator
 from data_loader import Custom_Dataset
 from utils import calculate_gradient_penalty, metrics
@@ -37,7 +38,7 @@ def arguement():
     parser.add_argument("-coef_recons", type=float, default=1)
     parser.add_argument("-gp_coef_recons", type=float, default=1)
     parser.add_argument("-seed", type=int, default=1)
-    parser.add_argument("-sample_size",type=int,default=1000)
+    parser.add_argument("-sample_size", type=int, default=1000)
 
     opt = parser.parse_args()
 
@@ -131,31 +132,37 @@ def eval_epoch(
     recons_discriminator,
     opt,
 ):
-    MSE=[]
-    MAE=[]
-    Median_se=[]
-    Median_ae=[]
+    MSE = []
+    MAE = []
+    Median_se = []
+    Median_ae = []
     for x_input, x_true in test_dataloader:
         inn = encoder(x_input)
+        inn = inn.detach().numpy()
         step = opt.pred_step
         decoder_in_len = opt.seq_len - 2 * opt.filter_size + 2  # 12
-        print("step=", step)
         inn_row_num = opt.seq_len - opt.filter_size + 1
 
-        recons_future_test_all = np.zeros((opt.sample_size, opt.batch_size, decoder_in_len))
-        print("recons_future_test_all", recons_future_test_all.shape)
+        recons_future_test_all = np.zeros(
+            (opt.sample_size, opt.batch_size, decoder_in_len)
+        )
 
         x_pred_median = np.empty((opt.batch_size, decoder_in_len))
         x_pred_mean = np.empty((opt.batch_size, decoder_in_len))
         for row in range(opt.batch_size):
             for j in range(decoder_in_len):
-                inn_test_temp = np.matlib.repmat(inn[row].copy(), opt.sample_size, 1)
-                inn_test_temp[:, j + opt.filter_size - step:j + opt.filter_size] = 2 * torch.rand((opt.sample_size, step)) - 1
-                decoder_out = decoder(inn_test_temp)
-                x_pred_median[row, j] = np.median(decoder_out[:, j], axis=0)
-                x_pred_mean[row, j] = np.mean(decoder_out[:, j], axis=0)
+                inn_test_temp = np.tile(inn[row, :, :].copy(), (opt.sample_size, 1, 1))
+                inn_test_temp[
+                    :, :, j + opt.filter_size - step : j + opt.filter_size
+                ] = np.random.uniform(
+                    low=-1.0, high=1.0, size=(opt.sample_size, opt.num_feature, step)
+                )
+                decoder_out = decoder(torch.tensor(inn_test_temp))
+                decoder_out = decoder_out.detach().numpy()
+                x_pred_median[row, j] = np.median(decoder_out[:, 0, j], axis=0)
+                x_pred_mean[row, j] = np.mean(decoder_out[:, 0, j], axis=0)
 
-        mse, mae, median_se, median_ae = metrics(x_true, x_pred_mean,x_pred_median)
+        mse, mae, median_se, median_ae = metrics(x_true, x_pred_mean, x_pred_median)
         MSE.append(mse)
         MAE.append(mae)
         Median_se.append(median_se)
@@ -167,7 +174,6 @@ def eval_epoch(
         sum(Median_se) / len(Median_se),
         sum(Median_ae) / len(Median_ae),
     )
-
 
 
 def main(opt):
@@ -193,7 +199,7 @@ def main(opt):
         opt.seq_len, opt.data_path, opt.dataset, "train", opt.pred_step
     )
     test_data = Custom_Dataset(
-        opt.seq_len, opt.data_path, opt.dataset, "test", opt.pred_step
+        opt.seq_len, opt.data_path, opt.dataset, "test", opt.seq_len-2*(opt.filter_size-1)
     )
     train_dataloader = DataLoader(train_data, batch_size=opt.batch_size, shuffle=True)
     test_dataloader = DataLoader(test_data, batch_size=opt.batch_size, shuffle=False)
@@ -230,14 +236,12 @@ def main(opt):
                 mse, mae, median_se, median_ae
             )
         )
-    #     iter_best_mse = min(iter_best_mse, mse)
-    #     iter_best_mae = min(iter_best_mae, mae)
-    #     iter_best_median_se = min(iter_best_median_se, median_se)
-    #     iter_best_median_ae = min(iter_best_median_ae, median_ae)
-    #
-    # return iter_best_mse, iter_best_mae, iter_best_median_se, iter_best_median_ae
+        iter_best_mse = min(iter_best_mse, mse)
+        iter_best_mae = min(iter_best_mae, mae)
+        iter_best_median_se = min(iter_best_median_se, median_se)
+        iter_best_median_ae = min(iter_best_median_ae, median_ae)
 
-    return None
+    return iter_best_mse, iter_best_mae, iter_best_median_se, iter_best_median_ae
 
 
 if __name__ == "__main__":

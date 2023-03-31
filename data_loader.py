@@ -28,23 +28,23 @@ class Custom_Dataset(Dataset):
 
     def __getitem__(self, index):
         if self.flag == "train":
-            y_input = self.train_data[:,index : index + self.input_size].clone()
+            y_input = self.train_data[:, index : index + self.input_size].clone()
 
-            if torch.all(y_input.std(dim=1)>0):
+            if torch.all(y_input.std(dim=1) > 0):
                 mean = y_input.mean(dim=1)
                 std = y_input.std(dim=1)
-                y_input = (y_input - mean.unsqueeze(1))/std.unsqueeze(1)
+                y_input = (y_input - mean.unsqueeze(1)) / std.unsqueeze(1)
 
             return y_input.squeeze(1)
 
         if self.flag == "test":
-            y_input = self.test_data[:,index : index + self.input_size].clone()
-            if y_input.mean()>0:
+            y_input = self.test_data[:, index : index + self.input_size].clone()
+            if torch.all(y_input.std(dim=1)) > 0:
                 mean = y_input.mean(dim=1)
                 std = y_input.std(dim=1)
-                y_input = (y_input - mean)/std
+                y_input = (y_input - mean.unsqueeze(1)) / std.unsqueeze(1)
 
-            y_true = self.test_data[index + self.pred_step]
+            y_true = self.test_data[0,-self.pred_step:]  # Only return the channel that needs prediction, which is always placed as the first channel
             return y_input.squeeze(1), y_true
 
 
@@ -54,11 +54,11 @@ def prepare_PJM(csv_path: str):
     test_start = "2022-09-01 00:00:00"
     test_end = "2022-12-31 00:00:00"
     data_frame = pd.read_csv(csv_path, index_col=0, parse_dates=True, decimal=",")
-    data_frame.fillna(0, inplace=True)
+    data_frame.fillna("bfill", inplace=True)
     training_data = torch.Tensor(
         data_frame[train_start:train_end].astype(np.float32).values
     )
     testing_data = torch.Tensor(
         data_frame[test_start:test_end].astype(np.float32).values
     )
-    return training_data.transpose(0,1), testing_data.transpose(0,1)
+    return training_data.transpose(0, 1), testing_data.transpose(0, 1)
