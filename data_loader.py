@@ -81,10 +81,12 @@ def prepare_PJM_spread(csv_path:str):
     test_end = "2022-12-31 00:00:00"
     data_frame = pd.read_csv(csv_path, index_col=0, parse_dates=True, decimal=",")
     data_frame.fillna(method="bfill", inplace=True)
+    data_frame.set_index("datetime_beginning_ept",inplace=True)
     training_data = torch.Tensor(
         data_frame[train_start:train_end].astype(np.float32).values
     )
     testing_data = torch.Tensor(
         data_frame[test_start:test_end].astype(np.float32).values
     )
+    return training_data.transpose(0, 1), testing_data.transpose(0, 1)
 
