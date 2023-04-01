@@ -2,6 +2,10 @@
 .idea/
 .DS_Store
 
+#Results Folder
+PJM_1/
+PJM_spread_1/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
