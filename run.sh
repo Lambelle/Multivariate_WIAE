@@ -26,7 +26,7 @@ do
           python main.py -data_path $data -dataset $dataset -output_dim $output_dim -hidden_dim $hidden_dim -seq_len $seq_len \
           -num_feature $num_feature -filter_size $filter_size -lrD $lrG -lrG $lrG -batch_size $batchsize -epochs $epochs\
            -num_critic $num_critic -gp_coef_inn $gp_coef_inn -gp_coef_recons $gp_coef_recons -coef_recons $coef_recons\
-          -seed $seed
+          -seed $seed -pred_step 2
         done
       done
     done
