@@ -54,7 +54,7 @@ class Custom_Dataset(Dataset):
                 y_input = (y_input - mean.unsqueeze(1)) / std.unsqueeze(1)
 
             y_true = y_input[
-                0, -self.pred_step :
+                :, -self.pred_step :
             ]  # Only return the channel that needs prediction, which is always placed as the first channel
             return y_input.squeeze(1), y_true
 

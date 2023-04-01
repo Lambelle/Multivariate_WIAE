@@ -1,9 +1,10 @@
 import argparse
+import os
 import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 import numpy as np
-import numpy.matlib
+import matplotlib.pyplot as plt
 from model import Generator, Discriminator
 from data_loader import Custom_Dataset
 from utils import calculate_gradient_penalty, metrics
@@ -131,11 +132,16 @@ def eval_epoch(
     inn_discriminator,
     recons_discriminator,
     opt,
+    save_predict=False,
 ):
     MSE = []
     MAE = []
     Median_se = []
     Median_ae = []
+    if save_predict:
+        all_pred_mean = np.empty((1, opt.num_feature))
+        all_pred_median = np.empty((1, opt.num_feature))
+        all_true = np.empty((1, opt.num_feature))
     for x_input, x_true in test_dataloader:
         inn = encoder(x_input)
         inn = inn.detach().numpy()
@@ -147,8 +153,8 @@ def eval_epoch(
             (opt.sample_size, inn.shape[0], decoder_in_len)
         )
 
-        x_pred_median = np.empty((inn.shape[0], decoder_in_len))
-        x_pred_mean = np.empty((inn.shape[0], decoder_in_len))
+        x_pred_median = np.empty((inn.shape[0], opt.num_feature, decoder_in_len))
+        x_pred_mean = np.empty((inn.shape[0], opt.num_feature, decoder_in_len))
         for row in range(inn.shape[0]):
             for j in range(decoder_in_len):
                 inn_test_temp = np.tile(inn[row, :, :].copy(), (opt.sample_size, 1, 1))
@@ -159,14 +165,84 @@ def eval_epoch(
                 )
                 decoder_out = decoder(torch.tensor(inn_test_temp))
                 decoder_out = decoder_out.detach().numpy()
-                x_pred_median[row, j] = np.median(decoder_out[:, 0, j], axis=0)
-                x_pred_mean[row, j] = np.mean(decoder_out[:, 0, j], axis=0)
+                x_pred_median[row, :, j] = np.median(decoder_out[:, :, j], axis=0)
+                x_pred_mean[row, :, j] = np.mean(decoder_out[:, :, j], axis=0)
 
         mse, mae, median_se, median_ae = metrics(x_true, x_pred_mean, x_pred_median)
         MSE.append(mse)
         MAE.append(mae)
         Median_se.append(median_se)
         Median_ae.append(median_ae)
+
+        if save_predict:
+            all_mae = sum(MAE) / len(MAE)
+            all_mse = sum(MSE) / len(MSE)
+            all_median_se = sum(Median_se) / len(Median_se)
+            all_median_ae = sum(Median_ae) / len(Median_ae)
+
+            x_pred_mean = np.transpose(x_pred_mean, axes=(0, 2, 1))
+            x_pred_median = np.transpose(x_pred_median, axes=(0, 2, 1))
+            x_true = np.transpose(x_true, axes=(0, 2, 1))
+
+            all_pred_mean = np.append(
+                all_pred_mean,
+                x_pred_mean.reshape((-1, opt.num_feature)),
+                axis=0,
+            )
+            all_pred_median = np.append(
+                all_pred_median,
+                x_pred_median.reshape((-1, opt.num_feature)),
+                axis=0,
+            )
+            all_true = np.append(
+                all_true, x_true.reshape((-1, opt.num_feature)), axis=0
+            )
+
+    if save_predict:
+        median_fig_name = "{}_{}/Median_lrG_{}gp_w_{}gp_w_ded_{}de_w_{}seed_{}MSE_{}MAE_{}MedianSE_{}MedianAE_{}.jpg".format(
+            opt.dataset,
+            opt.pred_step,
+            opt.lrG,
+            opt.gp_coef_inn,
+            opt.gp_coef_recons,
+            opt.coef_recons,
+            opt.seed,
+            all_mse,
+            all_mae,
+            all_median_se,
+            all_median_ae,
+        )
+
+        mean_fig_name = "{}_{}/Mean_lrG_{}gp_w_{}gp_w_ded_{}de_w_{}seed_{}MSE_{}MAE_{}MedianSE_{}MedianAE_{}.jpg".format(
+            opt.dataset,
+            opt.pred_step,
+            opt.lrG,
+            opt.gp_coef_inn,
+            opt.gp_coef_recons,
+            opt.coef_recons,
+            opt.seed,
+            all_mse,
+            all_mae,
+            all_median_se,
+            all_median_ae,
+        )
+        path = "{}_{}".format(opt.dataset, opt.pred_step)
+        if not os.path.exists(path):
+            os.mkdir(path)
+
+        all_true = np.transpose(all_true, axes=(1, 0))[1:, :]
+        all_pred_mean = np.transpose(all_pred_mean, axes=(1, 0))[1:, :]
+        all_pred_median = np.transpose(all_pred_median, axes=(1, 0))[1:, :]
+
+        plt.plot(all_pred_mean, label="Mean Estimation")
+        plt.plot(all_true, label="Ground Truth")
+        plt.savefig(mean_fig_name)
+        plt.clf()
+
+        plt.plot(all_pred_median, label="Median Estimation")
+        plt.plot(all_true, label="Ground Truth")
+        plt.savefig(.median_fig_name)
+        plt.clf()
 
     return (
         sum(MSE) / len(MSE),
@@ -236,6 +312,16 @@ def main(opt):
                 mse, mae, median_se, median_ae
             )
         )
+        if mse < iter_best_mse:
+            eval_epoch(
+                test_dataloader,
+                encoder,
+                decoder,
+                inn_discriminator,
+                recons_discriminator,
+                opt,
+                save_predict=True,
+            )
         iter_best_mse = min(iter_best_mse, mse)
         iter_best_mae = min(iter_best_mae, mae)
         iter_best_median_se = min(iter_best_median_se, median_se)
@@ -246,4 +332,5 @@ def main(opt):
 
 if __name__ == "__main__":
     opt = arguement()
+    torch.manual_seed(opt.seed)
     main(opt)
