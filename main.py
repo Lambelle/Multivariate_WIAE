@@ -230,19 +230,23 @@ def eval_epoch(
         if not os.path.exists(path):
             os.mkdir(path)
 
-        all_true = np.transpose(all_true, axes=(1, 0))[1:, :]
-        all_pred_mean = np.transpose(all_pred_mean, axes=(1, 0))[1:, :]
-        all_pred_median = np.transpose(all_pred_median, axes=(1, 0))[1:, :]
+        all_true = all_true[1:, :]
+        all_pred_mean = all_pred_mean[1:, :]
+        all_pred_median = all_pred_median[1:, :]
 
-        plt.plot(all_pred_mean, label="Mean Estimation")
-        plt.plot(all_true, label="Ground Truth")
+        plt.figure()
+        plt.plot(all_true[:,0], label="Ground Truth")
+        plt.plot(all_pred_mean[:, 0], label="Mean Estimation")
+        plt.legend()
         plt.savefig(mean_fig_name)
-        plt.clf()
+        plt.close()
 
-        plt.plot(all_pred_median, label="Median Estimation")
-        plt.plot(all_true, label="Ground Truth")
-        plt.savefig(.median_fig_name)
-        plt.clf()
+        plt.figure()
+        plt.plot(all_true[:,0], label="Ground Truth")
+        plt.plot(all_pred_median[:, 0], label="Median Estimation")
+        plt.legend()
+        plt.savefig(median_fig_name)
+        plt.close()
 
     return (
         sum(MSE) / len(MSE),
