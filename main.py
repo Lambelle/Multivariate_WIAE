@@ -234,14 +234,14 @@ def eval_epoch(
         all_pred_median = all_pred_median[1:, :]
 
         plt.figure()
-        plt.plot(all_true[:,0], label="Ground Truth")
+        plt.plot(all_true[:, 0], label="Ground Truth")
         plt.plot(all_pred_mean[:, 0], label="Mean Estimation")
         plt.legend()
         plt.savefig(mean_fig_name)
         plt.close()
 
         plt.figure()
-        plt.plot(all_true[:,0], label="Ground Truth")
+        plt.plot(all_true[:, 0], label="Ground Truth")
         plt.plot(all_pred_median[:, 0], label="Median Estimation")
         plt.legend()
         plt.savefig(median_fig_name)
@@ -316,6 +316,7 @@ def main(opt):
             )
         )
         if mse < iter_best_mse:
+            epoch = i
             eval_epoch(
                 test_dataloader,
                 encoder,
@@ -330,10 +331,22 @@ def main(opt):
         iter_best_median_se = min(iter_best_median_se, median_se)
         iter_best_median_ae = min(iter_best_median_ae, median_ae)
 
+    print(
+        "Best Testing Results for this iteration at epoch {}, with MSE:{}, MAE:{}, Median SE:{}, Median AE:{}".format(
+            epoch,
+            iter_best_mse,
+            iter_best_mae,
+            iter_best_median_se,
+            iter_best_median_ae,
+        )
+    )
+
     return iter_best_mse, iter_best_mae, iter_best_median_se, iter_best_median_ae
 
 
 if __name__ == "__main__":
     opt = arguement()
     torch.manual_seed(opt.seed)
+    print("---------------------------------------------New Parameter Run----------------------------------------------")
+    print("[Info]-Dataset:{}, Prediction Step:{}".format(opt.dataset, opt.pred_step))
     main(opt)
