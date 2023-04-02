@@ -17,7 +17,6 @@ class Generator(nn.Module):
             padding="valid",
             groups=input_dim,
         )
-        self.tanh = nn.Tanh()
         self.conv_layer_hidden = nn.Conv1d(
             input_dim * output_dim,
             input_dim * output_dim,
@@ -32,7 +31,6 @@ class Generator(nn.Module):
             padding="valid",
             groups=input_dim,
         )
-        self.relu = nn.ReLU()
         self.feature_conv_input = nn.Conv2d(
             1,
             4,
@@ -51,6 +49,9 @@ class Generator(nn.Module):
             (1, 1),
             padding="valid",
         )
+        self.tanh = nn.Tanh()
+        self.relu = nn.ReLU()
+        self.leakyrelu = nn.LeakyReLU()
         if self.flag not in {"decoder", "encoder"}:
             raise ValueError("flag can only be encoder or decoder")
 
@@ -72,24 +73,24 @@ class Generator(nn.Module):
             output = self.tanh(output)
             output = output.squeeze(1)
             output = output.transpose(1, 2)
-            output = self.relu(output)
+            output = self.tanh(output)
         elif self.flag == "decoder":
             output = input.transpose(1, 2)
             output = nn.functional.pad(output, (self.input_dim - 1, 0))
             output = self.feature_conv_input(output.unsqueeze(1))
-            output = self.tanh(output)
+            output = self.leakyrelu(output)
             output = self.feature_conv_hidden(output)
-            output = self.tanh(output)
+            output = self.leakyrelu(output)
             output = self.feature_conv_output(output)
-            output = self.tanh(output)
+            output = self.leakyrelu(output)
             output = output.squeeze(1)
             output = output.transpose(1, 2)
             output = self.conv_layer_input(output)
-            output = self.tanh(output)
+            output = self.leakyrelu(output)
             output = self.conv_layer_hidden(output)
-            output = self.tanh(output)
+            output = self.leakyrelu(output)
             output = self.conv_layer_output(output)
-            output = self.relu(output)
+            output = self.leakyrelu(output)
 
         return output
 

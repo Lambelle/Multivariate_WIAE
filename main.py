@@ -128,11 +128,11 @@ def eval_epoch(
     test_dataloader,
     encoder,
     decoder,
-    inn_discriminator,
-    recons_discriminator,
     opt,
     save_predict=False,
 ):
+    encoder.eval()
+    decoder.eval()
     MSE = []
     MAE = []
     Median_se = []
@@ -146,11 +146,6 @@ def eval_epoch(
         inn = inn.detach().numpy()
         step = opt.pred_step
         decoder_in_len = opt.seq_len - 2 * opt.filter_size + 2  # 12
-        inn_row_num = opt.seq_len - opt.filter_size + 1
-
-        recons_future_test_all = np.zeros(
-            (opt.sample_size, inn.shape[0], decoder_in_len)
-        )
 
         x_pred_median = np.empty((inn.shape[0], opt.num_feature, decoder_in_len))
         x_pred_mean = np.empty((inn.shape[0], opt.num_feature, decoder_in_len))
@@ -306,8 +301,6 @@ def main(opt):
             test_dataloader,
             encoder,
             decoder,
-            inn_discriminator,
-            recons_discriminator,
             opt,
         )
         print(
@@ -321,8 +314,6 @@ def main(opt):
                 test_dataloader,
                 encoder,
                 decoder,
-                inn_discriminator,
-                recons_discriminator,
                 opt,
                 save_predict=True,
             )
