@@ -33,18 +33,18 @@ class Generator(nn.Module):
         )
         self.feature_conv_input = nn.Conv2d(
             1,
-            4,
+            32,
             (1, input_dim),
             padding="valid",
         )
         self.feature_conv_hidden = nn.Conv2d(
-            4,
-            4,
+            32,
+            32,
             (1, 1),
             padding="valid",
         )
         self.feature_conv_output = nn.Conv2d(
-            4,
+            32,
             1,
             (1, 1),
             padding="valid",
@@ -58,39 +58,38 @@ class Generator(nn.Module):
     def forward(self, input: torch.Tensor):
         if self.flag == "encoder":
             output = self.conv_layer_input(input)
-            output = self.tanh(output)
-            output = self.conv_layer_hidden(output)
-            output = self.tanh(output)
+            # output = self.tanh(output)
+            # output = self.conv_layer_hidden(output)
+            # output = self.tanh(output)
             output = self.conv_layer_output(output)
-            output = self.tanh(output)
+            # output = self.tanh(output)
             output = output.transpose(1, 2)
             output = nn.functional.pad(output, (self.input_dim - 1, 0))
             output = self.feature_conv_input(output.unsqueeze(1))
-            output = self.tanh(output)
-            output = self.feature_conv_hidden(output)
-            output = self.tanh(output)
+            # output = self.tanh(output)
+            # output = self.feature_conv_hidden(output)
+            # output = self.tanh(output)
             output = self.feature_conv_output(output)
             output = self.tanh(output)
             output = output.squeeze(1)
             output = output.transpose(1, 2)
-            output = self.tanh(output)
         elif self.flag == "decoder":
             output = input.transpose(1, 2)
             output = nn.functional.pad(output, (self.input_dim - 1, 0))
             output = self.feature_conv_input(output.unsqueeze(1))
-            output = self.leakyrelu(output)
-            output = self.feature_conv_hidden(output)
-            output = self.leakyrelu(output)
+            output = self.relu(output)
+            # output = self.feature_conv_hidden(output)
+            output = self.relu(output)
             output = self.feature_conv_output(output)
-            output = self.leakyrelu(output)
+            output = self.relu(output)
             output = output.squeeze(1)
             output = output.transpose(1, 2)
             output = self.conv_layer_input(output)
-            output = self.leakyrelu(output)
-            output = self.conv_layer_hidden(output)
-            output = self.leakyrelu(output)
+            output = self.relu(output)
+            # output = self.conv_layer_hidden(output)
+            output = self.relu(output)
             output = self.conv_layer_output(output)
-            output = self.leakyrelu(output)
+            # output = self.leakyrelu(output)
 
         return output
 
@@ -103,6 +102,7 @@ class Discriminator(nn.Module):
         self.output_layer = nn.Linear(hidden_dim, 1)
         self.tanh = nn.Tanh()
         self.LeakyRelu = nn.LeakyReLU()
+        self.relu =  nn.ReLU()
 
         self.main = nn.Sequential(
             self.input_layer,
@@ -110,7 +110,7 @@ class Discriminator(nn.Module):
             self.hidden_layer,
             self.tanh,
             self.output_layer,
-            self.LeakyRelu,
+            # self.relu,
         )
 
     def forward(self, input):

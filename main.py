@@ -61,7 +61,7 @@ def train_epoch(
     recons_discriminator.train()
     loss_D = []
     loss_G = []
-
+    # loss_G = [1]
     for x_input in tqdm(train_dataloader):
         optimizer_discriminator.zero_grad()
 
@@ -71,14 +71,14 @@ def train_epoch(
 
         inn_fake_output = inn_discriminator(inn)
         inn_real_output = inn_discriminator(inn_real)
-        inn_score_real = inn_real_output.mean().item()
-        inn_score_fake = inn_fake_output.mean().item()
+        inn_score_real = inn_real_output.mean()
+        inn_score_fake = inn_fake_output.mean()
 
         recons_fake_output = recons_discriminator(x_recons)
         remaining_length = x_recons.shape[2]
         recons_real_output = recons_discriminator(x_input[:, :, -remaining_length:])
-        recons_score_real = recons_real_output.mean().item()
-        recons_score_fake = recons_fake_output.mean().item()
+        recons_score_real = recons_real_output.mean()
+        recons_score_fake = recons_fake_output.mean()
 
         inn_gradient_penalty = calculate_gradient_penalty(
             inn_discriminator, inn_real, inn
@@ -93,7 +93,7 @@ def train_epoch(
             + opt.gp_coef_inn * inn_gradient_penalty
             + opt.coef_recons
             * (
-                +recons_score_fake
+                recons_score_fake
                 - recons_score_real
                 + opt.gp_coef_recons * recons_gradient_penalty
             )
@@ -302,6 +302,7 @@ def main(opt):
             encoder,
             decoder,
             opt,
+            True,
         )
         print(
             "Test result-MSE:{}, MAE:{}, Median SE:{}, Median AE:{}".format(
@@ -310,13 +311,13 @@ def main(opt):
         )
         if mse < iter_best_mse:
             epoch = i
-            eval_epoch(
-                test_dataloader,
-                encoder,
-                decoder,
-                opt,
-                save_predict=True,
-            )
+            # eval_epoch(
+            #     test_dataloader,
+            #     encoder,
+            #     decoder,
+            #     opt,
+            #     save_predict=True,
+            # )
         iter_best_mse = min(iter_best_mse, mse)
         iter_best_mae = min(iter_best_mae, mae)
         iter_best_median_se = min(iter_best_median_se, median_se)
