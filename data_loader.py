@@ -46,6 +46,7 @@ class Custom_Dataset(Dataset):
         if self.flag == "test":
             seq_index = 2 * (self.filter_size - 1) + index * self.pred_step
             y_input = self.test_data[:, seq_index : seq_index + self.input_size].clone()
+
             if torch.all(y_input.std(dim=1)) > 0:
                 mean = y_input.mean(dim=1)
                 std = y_input.std(dim=1)
@@ -72,14 +73,15 @@ def prepare_PJM(csv_path: str):
     )
     return training_data.transpose(0, 1), testing_data.transpose(0, 1)
 
-def prepare_PJM_spread(csv_path:str):
+
+def prepare_PJM_spread(csv_path: str):
     train_start = "2022-01-01 00:00:00"
     train_end = "2022-09-01 23:00:00"
     test_start = "2022-09-01 00:00:00"
     test_end = "2022-12-31 00:00:00"
     data_frame = pd.read_csv(csv_path, index_col=0, parse_dates=True, decimal=",")
     data_frame.fillna(method="bfill", inplace=True)
-    data_frame.set_index("datetime_beginning_ept",inplace=True)
+    data_frame.set_index("datetime_beginning_ept", inplace=True)
     training_data = torch.Tensor(
         data_frame[train_start:train_end].astype(np.float32).values
     )
@@ -87,4 +89,3 @@ def prepare_PJM_spread(csv_path:str):
         data_frame[test_start:test_end].astype(np.float32).values
     )
     return training_data.transpose(0, 1), testing_data.transpose(0, 1)
-

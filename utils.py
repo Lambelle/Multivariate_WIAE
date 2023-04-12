@@ -3,7 +3,9 @@ import torch
 
 def calculate_gradient_penalty(discriminator, real_output, fake_output):
     epsilon = torch.rand((real_output.shape[0], 1, 1))
-    interpolates = (real_output + (1 - epsilon) * fake_output).requires_grad_(True)
+    interpolates = (epsilon * real_output + (1 - epsilon) * fake_output).requires_grad_(
+        True
+    )
 
     interpolate_output = discriminator(interpolates)
     # gradients = torch.autograd.grad(outputs=interpolate_output,inputs=interpolates)
@@ -18,7 +20,7 @@ def calculate_gradient_penalty(discriminator, real_output, fake_output):
         only_inputs=True,
     )[0]
     gradients = gradients.view(gradients.size(0), -1)
-    gradient_penalty = torch.mean((gradients.norm(2, dim=1) - 1) ** 2)
+    gradient_penalty = torch.mean((gradients.norm(p=2, dim=1) - 1) ** 2)
     return gradient_penalty
 
 

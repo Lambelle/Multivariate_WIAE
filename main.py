@@ -61,65 +61,68 @@ def train_epoch(
     recons_discriminator.train()
     loss_D = []
     loss_G = []
-    # loss_G = [1]
+
     for x_input in tqdm(train_dataloader):
-        optimizer_discriminator.zero_grad()
-
-        inn = encoder(x_input)
-        x_recons = decoder(inn)
-        inn_real = 2 * torch.rand(inn.shape) - 1
-
-        inn_fake_output = inn_discriminator(inn)
-        inn_real_output = inn_discriminator(inn_real)
-        inn_score_real = inn_real_output.mean()
-        inn_score_fake = inn_fake_output.mean()
-
-        recons_fake_output = recons_discriminator(x_recons)
-        remaining_length = x_recons.shape[2]
-        recons_real_output = recons_discriminator(x_input[:, :, -remaining_length:])
-        recons_score_real = recons_real_output.mean()
-        recons_score_fake = recons_fake_output.mean()
-
-        inn_gradient_penalty = calculate_gradient_penalty(
-            inn_discriminator, inn_real, inn
-        )
-        recons_gradient_penalty = calculate_gradient_penalty(
-            recons_discriminator, x_input[:, :, -remaining_length:], x_recons
-        )
-
-        loss_discriminator = (
-            inn_score_fake
-            - inn_score_real
-            + opt.gp_coef_inn * inn_gradient_penalty
-            + opt.coef_recons
-            * (
-                recons_score_fake
-                - recons_score_real
-                + opt.gp_coef_recons * recons_gradient_penalty
-            )
-        )
-
-        loss_D.append(loss_discriminator.item())
-
-        loss_discriminator.backward()
-        optimizer_discriminator.step()
 
         for i in range(opt.num_critic):
-            optimizer_generator.zero_grad()
+            optimizer_discriminator.zero_grad()
 
             inn = encoder(x_input)
             x_recons = decoder(inn)
-
+            inn_real = 2 * torch.rand(inn.shape) - 1
             inn_fake_output = inn_discriminator(inn)
+            inn_real_output = inn_discriminator(inn_real)
+            inn_score_real = inn_real_output.mean()
+            inn_score_fake = inn_fake_output.mean()
+
             recons_fake_output = recons_discriminator(x_recons)
+            remaining_length = x_recons.shape[2]
+            recons_real_output = recons_discriminator(x_input[:, :, -remaining_length:])
+            recons_score_real = recons_real_output.mean()
+            recons_score_fake = recons_fake_output.mean()
 
-            loss_generator = (
-                -inn_fake_output.mean() - opt.coef_recons * recons_fake_output.mean()
+            inn_gradient_penalty = calculate_gradient_penalty(
+                inn_discriminator, inn_real, inn
             )
-            loss_generator.backward()
-            optimizer_generator.step()
+            recons_gradient_penalty = calculate_gradient_penalty(
+                recons_discriminator, x_input[:, :, -remaining_length:], x_recons
+            )
 
-            loss_G.append(loss_generator.item())
+            loss_discriminator = (
+                inn_score_fake
+                - inn_score_real
+                + opt.gp_coef_inn * inn_gradient_penalty
+                + opt.coef_recons
+                * (
+                    recons_score_fake
+                    - recons_score_real
+                    + opt.gp_coef_recons * recons_gradient_penalty
+                )
+            )
+
+            loss_D.append(loss_discriminator.item())
+
+            loss_discriminator.backward()
+            optimizer_discriminator.step()
+
+        # Train Generators
+        optimizer_generator.zero_grad()
+
+        inn = encoder(x_input)
+        x_recons = decoder(inn)
+
+        inn_fake_output = inn_discriminator(inn)
+        recons_fake_output = recons_discriminator(x_recons)
+
+        loss_generator = (
+            -inn_fake_output.mean() - opt.coef_recons * recons_fake_output.mean()
+        )
+
+        # loss_generator = -torch.std(inn,dim=2).mean() - torch.std(x_recons,dim=2).mean()
+        loss_generator.backward()
+        optimizer_generator.step()
+
+        loss_G.append(loss_generator.item())
 
     return sum(loss_G) / len(loss_G), sum(loss_D) / len(loss_D)
 
@@ -147,20 +150,24 @@ def eval_epoch(
         step = opt.pred_step
         decoder_in_len = opt.seq_len - 2 * opt.filter_size + 2  # 12
 
-        x_pred_median = np.empty((inn.shape[0], opt.num_feature, decoder_in_len))
-        x_pred_mean = np.empty((inn.shape[0], opt.num_feature, decoder_in_len))
-        for row in range(inn.shape[0]):
-            for j in range(decoder_in_len):
-                inn_test_temp = np.tile(inn[row, :, :].copy(), (opt.sample_size, 1, 1))
-                inn_test_temp[
-                    :, :, j + opt.filter_size - step : j + opt.filter_size
-                ] = np.random.uniform(
-                    low=-1.0, high=1.0, size=(opt.sample_size, opt.num_feature, step)
-                )
-                decoder_out = decoder(torch.tensor(inn_test_temp))
-                decoder_out = decoder_out.detach().numpy()
-                x_pred_median[row, :, j] = np.median(decoder_out[:, :, j], axis=0)
-                x_pred_mean[row, :, j] = np.mean(decoder_out[:, :, j], axis=0)
+        x_pred_mean = decoder(torch.tensor(inn)).detach().numpy()
+        x_pred_median = decoder(torch.tensor(inn)).detach().numpy()
+
+        # x_pred_median = np.empty((inn.shape[0], opt.num_feature, decoder_in_len))
+        # x_pred_mean = np.empty((inn.shape[0], opt.num_feature, decoder_in_len))
+        # for row in range(inn.shape[0]):
+        #     for j in range(decoder_in_len):
+        #         inn_test_temp = np.tile(inn[row, :, :].copy(), (opt.sample_size, 1, 1))
+        #         inn_test_temp[
+        #             :, :, j + opt.filter_size - step : j + opt.filter_size
+        #         ] = np.random.uniform(
+        #             low=-1.0, high=1.0, size=(opt.sample_size, opt.num_feature, step)
+        #         )
+        #         decoder_out = decoder(torch.tensor(inn_test_temp))
+        #         decoder_out = decoder_out.detach().numpy()
+        #         x_pred_median[row, :, j] = np.median(decoder_out[:, :, j], axis=0)
+        #         x_pred_mean[row, :, j] = np.mean(decoder_out[:, :, j], axis=0)
+        #
 
         mse, mae, median_se, median_ae = metrics(x_true, x_pred_mean, x_pred_median)
         MSE.append(mse)
@@ -257,9 +264,11 @@ def main(opt):
     decoder = Generator(
         opt.num_feature, opt.num_feature, opt.filter_size, opt.seq_len, "decoder"
     )
-    inn_discriminator = Discriminator(opt.seq_len - opt.filter_size + 1, opt.hidden_dim)
+    inn_discriminator = Discriminator(
+        (opt.seq_len - opt.filter_size + 1) * opt.num_feature, opt.hidden_dim
+    )
     recons_discriminator = Discriminator(
-        opt.seq_len - 2 * (opt.filter_size - 1), opt.hidden_dim
+        (opt.seq_len - 2 * (opt.filter_size - 1)) * opt.num_feature, opt.hidden_dim
     )
     optimizer_generator = torch.optim.Adam(
         list(encoder.parameters()) + list(decoder.parameters()),
@@ -294,7 +303,7 @@ def main(opt):
         )
         print(
             "Epoch {}: Generator Loss: {}, Discriminator Loss:{}".format(
-                i, loss_G, loss_D
+                i + 1, loss_G, loss_D
             )
         )
         mse, mae, median_se, median_ae = eval_epoch(
@@ -310,7 +319,7 @@ def main(opt):
             )
         )
         if mse < iter_best_mse:
-            epoch = i
+            epoch = i + 1
             # eval_epoch(
             #     test_dataloader,
             #     encoder,
@@ -339,6 +348,8 @@ def main(opt):
 if __name__ == "__main__":
     opt = arguement()
     torch.manual_seed(opt.seed)
-    print("---------------------------------------------New Parameter Run----------------------------------------------")
+    print(
+        "---------------------------------------------New Parameter Run----------------------------------------------"
+    )
     print("[Info]-Dataset:{}, Prediction Step:{}".format(opt.dataset, opt.pred_step))
     main(opt)
