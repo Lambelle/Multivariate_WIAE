@@ -9,6 +9,8 @@ Revised_NYISO_RTDA_load_2D_24/
 Revised_NYISO_RTDA_load_24/
 Revised_PJM_ACE_20
 
+min_mse.py
+min_prob.py
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
