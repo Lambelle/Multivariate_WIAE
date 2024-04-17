@@ -3,11 +3,11 @@
 .DS_Store
 
 #Results Folder
-PJM_1/
-PJM_spread_1/
-PJM_2/
-PJM_5/
-PJM_spread_24/
+Revised_CTS_2D_5/
+Revised_CTS_5/
+Revised_NYISO_RTDA_load_2D_24/
+Revised_NYISO_RTDA_load_24/
+Revised_PJM_ACE_20
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
