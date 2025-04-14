@@ -8,6 +8,10 @@ Revised_CTS_5/
 Revised_NYISO_RTDA_load_2D_24/
 Revised_NYISO_RTDA_load_24/
 Revised_PJM_ACE_20
+Revised_PJM_spread_1/
+PJM_spread_1/
+PJM_1/
+
 
 min_mse.py
 min_prob.py
