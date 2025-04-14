@@ -26,11 +26,8 @@ class Custom_Dataset(Dataset):
             return self.train_data.shape[1] - self.input_size
         elif self.flag == "test":
             return (
-                self.test_data.shape[1]
-                - 2 * (self.filter_size - 1)
-                - self.input_size
-                - self.pred_step
-            ) // self.pred_step  # Calculate the number of windows
+                self.test_data.shape[1] - self.input_size - self.pred_step
+            )  # Calculate the number of windows
 
     def __getitem__(self, index):
         if self.flag == "train":
@@ -44,8 +41,7 @@ class Custom_Dataset(Dataset):
             return y_input.squeeze(1)
 
         if self.flag == "test":
-            seq_index = 2 * (self.filter_size - 1) + index * self.pred_step
-            y_input = self.test_data[:, seq_index : seq_index + self.input_size].clone()
+            y_input = self.test_data[:, index : index + self.input_size].clone()
 
             if torch.all(y_input.std(dim=1)) > 0:
                 mean = y_input.mean(dim=1)
@@ -55,8 +51,8 @@ class Custom_Dataset(Dataset):
                 std = torch.ones(y_input.std(dim=1).shape)
                 mean = torch.zeros(y_input.mean(dim=1).shape)
 
-            y_true = y_input[
-                :, -self.pred_step :
+            y_true = self.test_data[
+                :, index + self.input_size + self.pred_step
             ]  # Only return the channel that needs prediction, which is always placed as the first channel
             return y_input.squeeze(1), y_true, mean, std
 
@@ -93,7 +89,8 @@ def prepare_PJM_spread(csv_path: str):
     )
     return training_data.transpose(0, 1), testing_data.transpose(0, 1)
 
-def prepare_NYISO_spread(csv_path:str):
+
+def prepare_NYISO_spread(csv_path: str):
     train_start = "2023-07-01 00:00:00"
     train_end = "2023-07-25 23:00:00"
     test_start = "2023-07-25 23:00:05"
@@ -109,7 +106,8 @@ def prepare_NYISO_spread(csv_path:str):
     )
     return training_data.transpose(0, 1), testing_data.transpose(0, 1)
 
-def prepare_NYISO_RT(csv_path:str):
+
+def prepare_NYISO_RT(csv_path: str):
     train_start = "2023-07-01 00:00:05"
     train_end = "2023-07-25 23:00:00"
     test_start = "2023-07-25 23:00:05"
@@ -125,7 +123,8 @@ def prepare_NYISO_RT(csv_path:str):
     )
     return training_data.transpose(0, 1), testing_data.transpose(0, 1)
 
-def prepare_NYISO_spread_2D(csv_path:str):
+
+def prepare_NYISO_spread_2D(csv_path: str):
     train_start = "2023-07-01 00:00:05"
     train_end = "2023-07-25 23:00:00"
     test_start = "2023-07-25 23:00:05"
@@ -141,7 +140,8 @@ def prepare_NYISO_spread_2D(csv_path:str):
     )
     return training_data.transpose(0, 1), testing_data.transpose(0, 1)
 
-def prepare_NYISO_RTDA_load(csv_path:str):
+
+def prepare_NYISO_RTDA_load(csv_path: str):
     train_start = "2023-07-01 00:00:05"
     train_end = "2023-07-25 23:00:00"
     test_start = "2023-07-25 23:00:05"
@@ -157,7 +157,8 @@ def prepare_NYISO_RTDA_load(csv_path:str):
     )
     return training_data.transpose(0, 1), testing_data.transpose(0, 1)
 
-def prepare_NYISO_RTDA_load_2D(csv_path:str):
+
+def prepare_NYISO_RTDA_load_2D(csv_path: str):
     train_start = "2023-07-01 00:00:05"
     train_end = "2023-07-25 23:00:00"
     test_start = "2023-07-25 23:00:05"
@@ -173,7 +174,8 @@ def prepare_NYISO_RTDA_load_2D(csv_path:str):
     )
     return training_data.transpose(0, 1), testing_data.transpose(0, 1)
 
-def prepare_PJM_ACE(csv_path:str):
+
+def prepare_PJM_ACE(csv_path: str):
     train_start = "2024-01-24 05:40:00"
     train_end = "2024-01-25 16:40:00"
     test_start = "2024-01-25 16:40:15"
@@ -187,9 +189,10 @@ def prepare_PJM_ACE(csv_path:str):
     testing_data = torch.Tensor(
         data_frame[test_start:test_end].astype(np.float32).values
     )
-    return training_data.transpose(0,1), testing_data.transpose(0,1)
+    return training_data.transpose(0, 1), testing_data.transpose(0, 1)
 
-def prepare_CTS(csv_path:str):
+
+def prepare_CTS(csv_path: str):
     train_start = "2024-02-08 00:00:00"
     train_end = "2024-02-18 00:00:00"
     test_start = "2024-02-18 00:00:15"
@@ -203,9 +206,10 @@ def prepare_CTS(csv_path:str):
     testing_data = torch.Tensor(
         data_frame[test_start:test_end].astype(np.float32).values
     )
-    return training_data.transpose(0,1), testing_data.transpose(0,1)
+    return training_data.transpose(0, 1), testing_data.transpose(0, 1)
 
-def prepare_CTS_2D(csv_path:str):
+
+def prepare_CTS_2D(csv_path: str):
     train_start = "2024-02-08 00:00:00"
     train_end = "2024-02-18 00:00:00"
     test_start = "2024-02-18 00:00:15"
