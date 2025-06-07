@@ -161,7 +161,7 @@ def eval_epoch(
     all_pred_mean = np.empty((1, num_feature))
     all_pred_median = np.empty((1, num_feature))
     all_true = np.empty((1, num_feature))
-    all_pred_all = np.empty((1,opt.sample_size,num_feature))
+    all_pred_all = np.empty((1, opt.sample_size, num_feature))
     for x_input, x_true, x_mean, x_std in test_dataloader:
         if opt.univariate:
             x_true = x_true[:, 0, :].unsqueeze(1)
@@ -180,23 +180,21 @@ def eval_epoch(
         x_pred_all = np.empty((inn.shape[0], opt.sample_size, num_feature))
         for row in range(inn.shape[0]):
             inn_test_temp = np.tile(inn[row, :, :].copy(), (opt.sample_size, 1, 1))
-            inn_test_new = np.roll(inn_test_temp, shift=step, axis=2)
-            inn_test_new[:, :, -1 * step :] = np.random.uniform(
+            inn_test_temp[:, :, -1 * step :] = np.random.uniform(
                 low=-1.0, high=1.0, size=(opt.sample_size, num_feature, step)
             )
-            decoder_out = decoder(torch.tensor(inn_test_new))
+            decoder_out = decoder(torch.tensor(inn_test_temp))
             decoder_out = decoder_out.detach().numpy()
             x_pred_median[row, :] = np.median(decoder_out[:, :, -1], axis=0)
             x_pred_mean[row, :] = np.mean(decoder_out[:, :, -1], axis=0)
             x_pred_all[row, :, :] = decoder_out[:, :, -1]
         # Take only some rows for evaluation
 
-        x_true = x_true * x_std + x_mean
         x_pred_mean = x_pred_mean * x_std.detach().numpy() + x_mean.detach().numpy()
         x_pred_median = x_pred_median * x_std.detach().numpy() + x_mean.detach().numpy()
         x_pred_all = x_pred_all * np.expand_dims(
-            x_std.detach().numpy(), axis=(1, )
-        ) + np.expand_dims(x_mean.detach().numpy(), axis=(1, ))
+            x_std.detach().numpy(), axis=(1,)
+        ) + np.expand_dims(x_mean.detach().numpy(), axis=(1,))
 
         all_pred_mean = np.append(
             all_pred_mean,
@@ -209,52 +207,33 @@ def eval_epoch(
             axis=0,
         )
         all_true = np.append(all_true, x_true, axis=0)
-        all_pred_all = np.append(all_pred_all,x_pred_all,axis=0)
-
+        all_pred_all = np.append(all_pred_all, x_pred_all, axis=0)
 
     MAX_V = np.max(all_true, axis=0)[0]
     MIN_V = np.min(all_true, axis=0)[0]
 
-    if "NYISO" not in opt.dataset and "CTS" not in opt.dataset:
-        (
-            mse,
-            mae,
-            median_se,
-            median_ae,
-            mape,
-            mase,
-            crps_score,
-            uncond_cov_90,
-            pinaw_90,
-            uncond_cov_50,
-            pinaw_50,
-            uncond_cov_10,
-            pinaw_10,
-            cd,
-        ) = metrics(all_true, all_pred_mean, all_pred_median, all_pred_all, step)
-    else:
-        (
-            mse,
-            mae,
-            median_se,
-            median_ae,
-            mape,
-            mase,
-            crps_score,
-            uncond_cov_90,
-            pinaw_90,
-            uncond_cov_50,
-            pinaw_50,
-            uncond_cov_10,
-            pinaw_10,
-            cd,
-        ) = metrics(
-            all_true[:, 0, :].unsqueeze(1),
-            np.expand_dims(all_true[:, 0, :], axis=1),
-            np.expand_dims(all_pred_mean[:, 0, :], axis=1),
-            np.expand_dims(x_pred_all[:, :, 0, :], axis=2),
-            step,
-        )
+    (
+        mse,
+        mae,
+        median_se,
+        median_ae,
+        mape,
+        mase,
+        crps_score,
+        uncond_cov_90,
+        pinaw_90,
+        uncond_cov_50,
+        pinaw_50,
+        uncond_cov_10,
+        pinaw_10,
+        cd,
+    ) = metrics(
+        all_true[:, 0],
+        all_pred_mean[:, 0],
+        all_pred_median[:, 0],
+        all_pred_all[:, :, 0],
+        step,
+    )
 
     all_mae = round(mae, 4)
     all_mse = round(mse, 4)
@@ -266,9 +245,9 @@ def eval_epoch(
     all_uc_90 = round(uncond_cov_90, 4)
     all_uc_50 = round(uncond_cov_50, 4)
     all_uc_10 = round(uncond_cov_10, 4)
-    all_pinaw_90 = round(pinaw_90 / (MAX_V - MIN_V),4)
-    all_pinaw_50 = round(pinaw_50 / (MAX_V - MIN_V),4)
-    all_pinaw_10 = round(pinaw_10 / (MAX_V - MIN_V),4)
+    all_pinaw_90 = round(pinaw_90 / (MAX_V - MIN_V), 4)
+    all_pinaw_50 = round(pinaw_50 / (MAX_V - MIN_V), 4)
+    all_pinaw_10 = round(pinaw_10 / (MAX_V - MIN_V), 4)
     all_cd = round(cd, 4)
 
     if save_predict:

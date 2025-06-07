@@ -27,30 +27,26 @@ def calculate_gradient_penalty(discriminator, real_output, fake_output):
 
 def crps(y_true_all, y_pred_all, sample_weight=None):
     num_samples = y_pred_all.shape[1]
-    num_feature = y_pred_all.shape[2]
     total_crps = []
-    for i in range(num_feature):
-        y_true = y_true_all[:, i]
-        y_pred = np.transpose(y_pred_all[:, :, i], (1, 0))
-        absolute_error = np.mean(np.abs(y_pred - y_true), axis=0)
+    y_pred = np.transpose(y_pred_all, (1, 0))
+    absolute_error = np.mean(np.abs(y_pred - y_true_all), axis=0)
 
-        if num_samples == 1:
-            return np.average(absolute_error, weights=sample_weight)
+    if num_samples == 1:
+        return np.average(absolute_error, weights=sample_weight)
 
-        y_pred = np.sort(y_pred, axis=0)
-        b0 = y_pred.mean(axis=0)
-        b1_values = y_pred * np.arange(num_samples).reshape((num_samples, 1))
-        b1 = b1_values.mean(axis=0) / num_samples
+    y_pred = np.sort(y_pred, axis=0)
+    b0 = y_pred.mean(axis=0)
+    b1_values = y_pred * np.arange(num_samples).reshape((num_samples, 1))
+    b1 = b1_values.mean(axis=0) / num_samples
 
-        per_obs_crps = absolute_error + b0 - 2 * b1
-        crps = np.average(per_obs_crps, weights=sample_weight)
-        total_crps.append(crps)
+    per_obs_crps = absolute_error + b0 - 2 * b1
+    crps = np.average(per_obs_crps, weights=sample_weight)
+    total_crps.append(crps)
     return sum(total_crps) / len(total_crps)
 
 
 def uncond_coverage(alpha: float, y_true:np.ndarray, y_predict: np.ndarray):
     num_sample = y_predict.shape[1]
-    num_feature = y_predict.shape[2]
     interval_coverage = int(num_sample * (1 - alpha))
     total_uncond_conv = []
     total_width = []
@@ -60,18 +56,18 @@ def uncond_coverage(alpha: float, y_true:np.ndarray, y_predict: np.ndarray):
     else:
         start_index = interval_coverage // 2
         end_index = start_index + 1
-    for i in range(num_feature):
-        single_predict = y_predict[:, :, i]
-        single_true = y_true[:, i]
-        single_predict = np.sort(single_predict, axis=1)
-        lower_bound = single_predict[:, start_index]
-        upper_bound = single_predict[:, -end_index]
-        uncond_conv = np.sum(
+
+    single_predict = y_predict
+    single_true = y_true
+    single_predict = np.sort(single_predict, axis=1)
+    lower_bound = single_predict[:, start_index]
+    upper_bound = single_predict[:, -end_index]
+    uncond_conv = np.sum(
             np.logical_and(lower_bound < single_true, single_true < upper_bound)
-        ) / (single_true.size)
-        width = np.mean(upper_bound-lower_bound)
-        total_width.append(width)
-        total_uncond_conv.append(uncond_conv.item())
+    ) / (single_true.size)
+    width = np.mean(upper_bound-lower_bound)
+    total_width.append(width)
+    total_uncond_conv.append(uncond_conv.item())
 
     return sum(total_uncond_conv) / len(total_uncond_conv), sum(total_width)/len(total_width)
 

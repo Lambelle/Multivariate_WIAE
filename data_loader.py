@@ -52,7 +52,7 @@ class Custom_Dataset(Dataset):
                 mean = torch.zeros(y_input.mean(dim=1).shape)
 
             y_true = self.test_data[
-                :, index + self.input_size + self.pred_step
+                :, index + self.input_size
             ]  # Only return the channel that needs prediction, which is always placed as the first channel
             return y_input.squeeze(1), y_true, mean, std
 
@@ -214,6 +214,294 @@ def prepare_CTS_2D(csv_path: str):
     train_end = "2024-02-18 00:00:00"
     test_start = "2024-02-18 00:00:15"
     test_end = "2024-02-20 00:10:15"
+    data_frame = pd.read_csv(csv_path, index_col=0, parse_dates=True, decimal=",")
+    data_frame.fillna(method="bfill", inplace=True)
+    # data_frame.set_index("datetime_beginning_ept", inplace=True)
+    training_data = torch.Tensor(
+        data_frame[train_start:train_end].astype(np.float32).values
+    )
+    testing_data = torch.Tensor(
+        data_frame[test_start:test_end].astype(np.float32).values
+    )
+    return training_data.transpose(0, 1), testing_data.transpose(0, 1)
+
+
+def prepare_NYISO_RTDA_Summer_Week1(csv_path: str):
+    train_start = "2023-06-01 00:05:00"
+    train_end = "2023-06-30 23:55:00"
+    test_start = "2023-07-01 00:00:00"
+    test_end = "2023-07-07 23:55:00"
+
+    data_frame = pd.read_csv(csv_path, index_col=0, parse_dates=True, decimal=",")
+    data_frame.fillna(method="bfill", inplace=True)
+    # data_frame.set_index("datetime_beginning_ept", inplace=True)
+    training_data = torch.Tensor(
+        data_frame[train_start:train_end].astype(np.float32).values
+    )
+    testing_data = torch.Tensor(
+        data_frame[test_start:test_end].astype(np.float32).values
+    )
+    return training_data.transpose(0, 1), testing_data.transpose(0, 1)
+
+
+def prepare_NYISO_RTDA_Summer_Week2(csv_path: str):
+    train_start = "2023-06-08 00:00:00"
+    train_end = "2023-07-07 23:55:00"
+    test_start = "2023-07-08 00:00:00"
+    test_end = "2023-07-14 23:55:00"
+
+    data_frame = pd.read_csv(csv_path, index_col=0, parse_dates=True, decimal=",")
+    data_frame.fillna(method="bfill", inplace=True)
+    # data_frame.set_index("datetime_beginning_ept", inplace=True)
+    training_data = torch.Tensor(
+        data_frame[train_start:train_end].astype(np.float32).values
+    )
+    testing_data = torch.Tensor(
+        data_frame[test_start:test_end].astype(np.float32).values
+    )
+    return training_data.transpose(0, 1), testing_data.transpose(0, 1)
+
+
+def prepare_NYISO_RTDA_Summer_Week3(csv_path: str):
+    train_start = "2023-06-15 00:00:00"
+    train_end = "2023-07-14 23:55:00"
+    test_start = "2023-07-15 00:00:00"
+    test_end = "2023-07-21 23:55:00"
+
+    data_frame = pd.read_csv(csv_path, index_col=0, parse_dates=True, decimal=",")
+    data_frame.fillna(method="bfill", inplace=True)
+    # data_frame.set_index("datetime_beginning_ept", inplace=True)
+    training_data = torch.Tensor(
+        data_frame[train_start:train_end].astype(np.float32).values
+    )
+    testing_data = torch.Tensor(
+        data_frame[test_start:test_end].astype(np.float32).values
+    )
+    return training_data.transpose(0, 1), testing_data.transpose(0, 1)
+
+
+def prepare_NYISO_RTDA_Summer_Week4(csv_path: str):
+    train_start = "2023-06-22 00:00:00"
+    train_end = "2023-07-21 23:55:00"
+    test_start = "2023-07-22 00:00:00"
+    test_end = "2023-07-28 23:55:00"
+
+    data_frame = pd.read_csv(csv_path, index_col=0, parse_dates=True, decimal=",")
+    data_frame.fillna(method="bfill", inplace=True)
+    # data_frame.set_index("datetime_beginning_ept", inplace=True)
+    training_data = torch.Tensor(
+        data_frame[train_start:train_end].astype(np.float32).values
+    )
+    testing_data = torch.Tensor(
+        data_frame[test_start:test_end].astype(np.float32).values
+    )
+    return training_data.transpose(0, 1), testing_data.transpose(0, 1)
+
+
+def prepare_NYISO_RTDA_Fall_Week1(csv_path: str):
+    train_start = "2023-09-01 00:05:00"
+    train_end = "2023-09-30 23:55:00"
+    test_start = "2023-10-01 00:00:00"
+    test_end = "2023-10-07 23:55:00"
+
+    data_frame = pd.read_csv(csv_path, index_col=0, parse_dates=True, decimal=",")
+    data_frame.fillna(method="bfill", inplace=True)
+    # data_frame.set_index("datetime_beginning_ept", inplace=True)
+    training_data = torch.Tensor(
+        data_frame[train_start:train_end].astype(np.float32).values
+    )
+    testing_data = torch.Tensor(
+        data_frame[test_start:test_end].astype(np.float32).values
+    )
+    return training_data.transpose(0, 1), testing_data.transpose(0, 1)
+
+
+def prepare_NYISO_RTDA_Fall_Week2(csv_path: str):
+    train_start = "2023-09-08 00:00:00"
+    train_end = "2023-10-07 23:55:00"
+    test_start = "2023-10-08 00:00:00"
+    test_end = "2023-10-14 23:55:00"
+
+    data_frame = pd.read_csv(csv_path, index_col=0, parse_dates=True, decimal=",")
+    data_frame.fillna(method="bfill", inplace=True)
+    # data_frame.set_index("datetime_beginning_ept", inplace=True)
+    training_data = torch.Tensor(
+        data_frame[train_start:train_end].astype(np.float32).values
+    )
+    testing_data = torch.Tensor(
+        data_frame[test_start:test_end].astype(np.float32).values
+    )
+    return training_data.transpose(0, 1), testing_data.transpose(0, 1)
+
+
+def prepare_NYISO_RTDA_Fall_Week3(csv_path: str):
+    train_start = "2023-09-15 00:00:00"
+    train_end = "2023-10-14 23:55:00"
+    test_start = "2023-10-15 00:00:00"
+    test_end = "2023-10-21 23:55:00"
+
+    data_frame = pd.read_csv(csv_path, index_col=0, parse_dates=True, decimal=",")
+    data_frame.fillna(method="bfill", inplace=True)
+    # data_frame.set_index("datetime_beginning_ept", inplace=True)
+    training_data = torch.Tensor(
+        data_frame[train_start:train_end].astype(np.float32).values
+    )
+    testing_data = torch.Tensor(
+        data_frame[test_start:test_end].astype(np.float32).values
+    )
+    return training_data.transpose(0, 1), testing_data.transpose(0, 1)
+
+
+def prepare_NYISO_RTDA_Fall_Week4(csv_path: str):
+    train_start = "2023-09-22 00:00:00"
+    train_end = "2023-10-21 23:55:00"
+    test_start = "2023-10-22 00:00:00"
+    test_end = "2023-10-28 23:55:00"
+
+    data_frame = pd.read_csv(csv_path, index_col=0, parse_dates=True, decimal=",")
+    data_frame.fillna(method="bfill", inplace=True)
+    # data_frame.set_index("datetime_beginning_ept", inplace=True)
+    training_data = torch.Tensor(
+        data_frame[train_start:train_end].astype(np.float32).values
+    )
+    testing_data = torch.Tensor(
+        data_frame[test_start:test_end].astype(np.float32).values
+    )
+    return training_data.transpose(0, 1), testing_data.transpose(0, 1)
+
+
+def prepare_NYISO_RTDA_Winter_Week1(csv_path: str):
+    train_start = "2023-12-01 00:05:00"
+    train_end = "2023-12-31 23:55:00"
+    test_start = "2024-01-01 00:00:00"
+    test_end = "2024-01-07 23:55:00"
+
+    data_frame = pd.read_csv(csv_path, index_col=0, parse_dates=True, decimal=",")
+    data_frame.fillna(method="bfill", inplace=True)
+    # data_frame.set_index("datetime_beginning_ept", inplace=True)
+    training_data = torch.Tensor(
+        data_frame[train_start:train_end].astype(np.float32).values
+    )
+    testing_data = torch.Tensor(
+        data_frame[test_start:test_end].astype(np.float32).values
+    )
+    return training_data.transpose(0, 1), testing_data.transpose(0, 1)
+
+
+def prepare_NYISO_RTDA_Winter_Week2(csv_path: str):
+    train_start = "2023-12-08 00:00:00"
+    train_end = "2024-01-07 23:55:00"
+    test_start = "2024-01-08 00:00:00"
+    test_end = "2024-01-14 23:55:00"
+
+    data_frame = pd.read_csv(csv_path, index_col=0, parse_dates=True, decimal=",")
+    data_frame.fillna(method="bfill", inplace=True)
+    # data_frame.set_index("datetime_beginning_ept", inplace=True)
+    training_data = torch.Tensor(
+        data_frame[train_start:train_end].astype(np.float32).values
+    )
+    testing_data = torch.Tensor(
+        data_frame[test_start:test_end].astype(np.float32).values
+    )
+    return training_data.transpose(0, 1), testing_data.transpose(0, 1)
+
+
+def prepare_NYISO_RTDA_Winter_Week3(csv_path: str):
+    train_start = "2023-12-15 00:00:00"
+    train_end = "2024-01-14 23:55:00"
+    test_start = "2024-01-15 00:00:00"
+    test_end = "2024-01-21 23:55:00"
+
+    data_frame = pd.read_csv(csv_path, index_col=0, parse_dates=True, decimal=",")
+    data_frame.fillna(method="bfill", inplace=True)
+    # data_frame.set_index("datetime_beginning_ept", inplace=True)
+    training_data = torch.Tensor(
+        data_frame[train_start:train_end].astype(np.float32).values
+    )
+    testing_data = torch.Tensor(
+        data_frame[test_start:test_end].astype(np.float32).values
+    )
+    return training_data.transpose(0, 1), testing_data.transpose(0, 1)
+
+
+def prepare_NYISO_RTDA_Winter_Week4(csv_path: str):
+    train_start = "2023-12-22 00:00:00"
+    train_end = "2024-01-21 23:55:00"
+    test_start = "2024-01-22 00:00:00"
+    test_end = "2024-01-28 23:55:00"
+
+    data_frame = pd.read_csv(csv_path, index_col=0, parse_dates=True, decimal=",")
+    data_frame.fillna(method="bfill", inplace=True)
+    # data_frame.set_index("datetime_beginning_ept", inplace=True)
+    training_data = torch.Tensor(
+        data_frame[train_start:train_end].astype(np.float32).values
+    )
+    testing_data = torch.Tensor(
+        data_frame[test_start:test_end].astype(np.float32).values
+    )
+    return training_data.transpose(0, 1), testing_data.transpose(0, 1)
+
+
+def prepare_NYISO_RTDA_Spring_Week1(csv_path: str):
+    train_start = "2024-03-01 00:05:00"
+    train_end = "2024-03-31 23:55:00"
+    test_start = "2024-04-01 00:00:00"
+    test_end = "2024-04-07 23:55:00"
+
+    data_frame = pd.read_csv(csv_path, index_col=0, parse_dates=True, decimal=",")
+    data_frame.fillna(method="bfill", inplace=True)
+    # data_frame.set_index("datetime_beginning_ept", inplace=True)
+    training_data = torch.Tensor(
+        data_frame[train_start:train_end].astype(np.float32).values
+    )
+    testing_data = torch.Tensor(
+        data_frame[test_start:test_end].astype(np.float32).values
+    )
+    return training_data.transpose(0, 1), testing_data.transpose(0, 1)
+
+
+def prepare_NYISO_RTDA_Spring_Week2(csv_path: str):
+    train_start = "2024-03-08 00:00:00"
+    train_end = "2024-04-07 23:55:00"
+    test_start = "2024-04-08 00:00:00"
+    test_end = "2024-04-14 23:55:00"
+
+    data_frame = pd.read_csv(csv_path, index_col=0, parse_dates=True, decimal=",")
+    data_frame.fillna(method="bfill", inplace=True)
+    # data_frame.set_index("datetime_beginning_ept", inplace=True)
+    training_data = torch.Tensor(
+        data_frame[train_start:train_end].astype(np.float32).values
+    )
+    testing_data = torch.Tensor(
+        data_frame[test_start:test_end].astype(np.float32).values
+    )
+    return training_data.transpose(0, 1), testing_data.transpose(0, 1)
+
+
+def prepare_NYISO_RTDA_Spring_Week3(csv_path: str):
+    train_start = "2024-03-15 00:00:00"
+    train_end = "2024-04-14 23:55:00"
+    test_start = "2024-04-15 00:00:00"
+    test_end = "2024-04-21 23:55:00"
+
+    data_frame = pd.read_csv(csv_path, index_col=0, parse_dates=True, decimal=",")
+    data_frame.fillna(method="bfill", inplace=True)
+    # data_frame.set_index("datetime_beginning_ept", inplace=True)
+    training_data = torch.Tensor(
+        data_frame[train_start:train_end].astype(np.float32).values
+    )
+    testing_data = torch.Tensor(
+        data_frame[test_start:test_end].astype(np.float32).values
+    )
+    return training_data.transpose(0, 1), testing_data.transpose(0, 1)
+
+
+def prepare_NYISO_RTDA_Spring_Week4(csv_path: str):
+    train_start = "2024-03-22 00:00:00"
+    train_end = "2024-04-21 23:55:00"
+    test_start = "2024-04-22 00:00:00"
+    test_end = "2024-04-28 23:55:00"
+
     data_frame = pd.read_csv(csv_path, index_col=0, parse_dates=True, decimal=",")
     data_frame.fillna(method="bfill", inplace=True)
     # data_frame.set_index("datetime_beginning_ept", inplace=True)
